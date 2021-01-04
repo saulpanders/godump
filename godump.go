@@ -6,15 +6,15 @@
 
 	METHOD:
 
-			1. Enable SeDebugPriv on curent process
 			2. Get pointer to minidumpwritedump in memory
-			3. OpenProcess to get handle to PID with QUERY_READ (see below)
+			3. OpenProcess to get handle to PID with proc_all_access (see below)
 			4. CreateFile for dump file
 			5. Dump process memory
 
 	TODO:
 
 		add other memory dumping techniques
+		minidumpwritedump has some kind of bug still...
 
 */
 
@@ -53,7 +53,7 @@ const (
 	CREATE_ALWAYS         = 0x2
 	FILE_ATTRIBUTE_NORMAL = 0x80
 
-	DUMP_TYPE = 0x2
+	DEBUG_WITH_FULL_MEMORY = 0x00000002
 )
 
 func Pointer(s string) (uintptr, error) {
@@ -70,8 +70,7 @@ func main() {
 	pid := flag.Int("pid", 0, "Process ID to dump memory of")
 	flag.Parse()
 
-	dbghelp := windows.NewLazySystemDLL("dbghelp.dll")
-
+	dbghelp := windows.NewLazySystemDLL("Dbghelp.dll")
 	MiniDumpWriteDump := dbghelp.NewProc("MiniDumpWriteDump")
 	var sa windows.SecurityAttributes
 
@@ -97,9 +96,11 @@ func main() {
 		fmt.Println(fmt.Sprintf("[-]Successfully got a handle to file %d", fHandle))
 	}
 
+	PID := uintptr(*pid)
 	//dump memory with minidumpwritedump
-	success, _, errMiniDump := MiniDumpWriteDump.Call(uintptr(pHandle), uintptr(&(*pid)), uintptr(fHandle), 2, 0, 0, 0)
-	if errMiniDump != nil {
+	success, _, errMiniDump := MiniDumpWriteDump.Call(uintptr(pHandle), PID, uintptr(fHandle), DEBUG_WITH_FULL_MEMORY, 0, 0, 0)
+	//if errMiniDump != nil {
+	if success != 0 {
 		log.Fatal(fmt.Sprintf("[!]Error calling MiniDumpWriteDump:\r\n%s", errMiniDump.Error()))
 	}
 	if *verbose {
