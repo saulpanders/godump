@@ -9,13 +9,13 @@ Inspired by SharpDump(https://github.com/GhostPack/SharpDump) and several other 
 
 ## Usage
 ### Build
-'''
+```
 > go build godump.go
-'''
+```
 ### Arguments
 - pid: Process Id to dump memory of
 - verbose: boolean option to print status updates on program
 ### Example
-'''
+```
 > godump.exe -pid 1234 -verbose
-'''
+```
